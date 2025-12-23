@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-6">
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-white mb-4">Welcome to my website</h1>
+    <img src="NoBitches.png" class="mx-auto rounded-xl shadow-lg mb-8 w-full max-w-md">
+  </div>
+
+  <!-- Login / Signup -->
+  <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-6" data-aos="fade-up">
+    <h2 class="text-2xl font-bold text-white text-center mb-4">Login or Sign Up</h2>
+
+    <input id="username" type="text" placeholder="Username" class="w-full px-4 py-2 mb-3 rounded bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-400">
+    <input id="password" type="password" placeholder="Password" class="w-full px-4 py-2 mb-3 rounded bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-400">
+    <input id="referral" type="text" placeholder="Referral code (optional)" class="w-full px-4 py-2 mb-4 rounded bg-white/90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400">
+
+    <div class="flex justify-between">
+      <button id="loginBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center">
+        <i data-feather="log-in" class="mr-2"></i> Login
+      </button>
+      <button id="signupBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+        <i data-feather="user-plus" class="mr-2"></i> Sign Up
+      </button>
+    </div>
+    <div class="mt-4 flex justify-center">
+      <button id="removeAllBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+        <i data-feather="trash-2" class="mr-2"></i> Remove All Accounts
+      </button>
+    </div>
+
+    <p class="text-sm text-center text-yellow-300 mt-3">✨ Sign up now to get a free shiny star ✨</p>
+    <p id="message" class="text-sm text-center text-white/80 mt-4"></p>
+  </div>
+
+  <script>
+    AOS.init();
+    feather.replace();
+  
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const referralInput = document.getElementById('referral');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const message = document.getElementById('message');
+  
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('users') || '{}');
+    }
+    function saveUsers(users) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+  
+    // --- SIGNUP ---
+    signupBtn.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      const referral = referralInput.value.trim();
+  
+      if (!username || !password) {
+        message.textContent = "Please enter a username and password.";
+        return;
+      }
+  
+      const users = getUsers();
+      if (users[username]) {
+        message.textContent = "Username already exists.";
+        return;
+      }
+  
+      // New user object
+      users[username] = { password: password, referralBonus: false };
+  
+      // --- Referral system starts here ---
+      if (referral && users[referral]) {
+        users[username].referralBonus = true; // new user starts at 20
+  
+        if (!users[referral].gotReferralBonus) {
+          users[referral].gotReferralBonus = true;
+  
+          // Instantly boost referrer’s number +10
+          const refNumberKey = referral + "_number";
+          const refNumber = parseInt(localStorage.getItem(refNumberKey) || "10");
+          localStorage.setItem(refNumberKey, refNumber + 10);
+  
+          // Save referral history
+          const refHistoryKey = referral + "_referrals";
+          const history = JSON.parse(localStorage.getItem(refHistoryKey) || "[]");
+          history.push(username);
+          localStorage.setItem(refHistoryKey, JSON.stringify(history));
+        }
+      }
+      // --- Referral system ends here ---
+  
+      saveUsers(users);
+      message.textContent = "⭐ Account created successfully!";
+    });
+  
+    // --- LOGIN ---
+    loginBtn.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+  
+      if (!username || !password) {
+        message.textContent = "Please enter a username and password.";
+        return;
+      }
+  
+      const users = getUsers();
+      if (users[username] && users[username].password === password) {
+        message.textContent = "Login successful!";
+        localStorage.setItem('loggedInUser', username);
+        window.location.href = "ganyu.html";
+      } else {
+        message.textContent = "Invalid username or password.";
+      }
+    });
+  
+    // --- Remove all accounts button (testing only) ---
+    document.getElementById('removeAllBtn').addEventListener('click', () => {
+      if (confirm("Are you sure you want to delete ALL accounts and data? This cannot be undone.")) {
+        localStorage.clear();
+        message.textContent = "🗑️ All accounts and data removed.";
+      }
+    });
+  </script>
+</body>
+</html>
